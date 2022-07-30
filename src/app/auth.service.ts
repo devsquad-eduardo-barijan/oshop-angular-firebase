@@ -3,6 +3,9 @@ import { AngularFireAuth } from '@angular/fire/auth';
 import { ActivatedRoute } from '@angular/router';
 import * as firebase from 'firebase';
 import { Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { AppUser } from './models/app-user';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +13,10 @@ import { Observable } from 'rxjs';
 export class AuthService {
   user$: Observable<firebase.default.User>;
 
-  constructor(private afAuth: AngularFireAuth, private route: ActivatedRoute) {
+  constructor(
+    private userService: UserService,
+    private afAuth: AngularFireAuth,
+    private route: ActivatedRoute) {
     this.user$ = afAuth.authState;
   }
 
@@ -22,5 +28,11 @@ export class AuthService {
 
   logout() {
     this.afAuth.signOut();
+  }
+
+  get appUser$(): Observable<AppUser> {
+    return this.user$.pipe(
+      switchMap(user => this.userService.get(user.uid).valueChanges())
+    );
   }
 }
